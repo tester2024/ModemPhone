@@ -1,0 +1,13 @@
+# Normalise line endings on checkout so the tree is consistent everywhere, and
+# keep binaries out of text diffs.
+* text=auto eol=lf
+
+*.go      text eol=lf
+*.ps1     text eol=crlf
+*.py      text eol=lf
+*.md      text eol=lf
+*.json    text eol=lf
+*.ico     binary
+*.ttf     binary
+*.png     binary
+*.syso    binary

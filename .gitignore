@@ -1,0 +1,27 @@
+# Build output and the executable
+/bin/
+*.exe
+*.syso
+
+# The modem's credentials. Never commit this: it holds the router password.
+cerd.txt
+*.key
+*.pem
+
+# Screenshots of the running app. They contain real message text from the
+# modem, so they stay out of the repository.
+shots/
+*.png
+!assets/icons/*.png
+!assets/fonts/*.png
+
+# Local settings written by the app at runtime
+config.json
+*.log
+
+# Editor and OS noise
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
