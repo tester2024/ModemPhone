@@ -16,6 +16,7 @@ import (
 	fapp "fyne.io/fyne/v2/app"
 
 	"modemphone/internal/app"
+	"modemphone/internal/applog"
 	"modemphone/internal/config"
 	"modemphone/internal/ui/theme"
 )
@@ -49,6 +50,13 @@ func appIcon() fyne.Resource {
 var startTab string
 
 func main() {
+	// The executable is a GUI app, so there is no console to log to. Send the
+	// log to a file instead, and keep the handle for the life of the process.
+	if w := applog.Open(); w != nil {
+		defer w.Close()
+		log.SetOutput(w)
+	}
+
 	// An argument naming a tab opens the app there: modemphone.exe ussd
 	startTab = firstArg()
 

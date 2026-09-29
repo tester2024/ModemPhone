@@ -33,7 +33,11 @@ try {
         }
     }
     New-Item -ItemType Directory -Force -Path "$PSScriptRoot\bin" | Out-Null
-    cmd /c "go build -trimpath -ldflags ""-s -w"" -o bin\modemphone.exe ./cmd/modemphone 2>&1"
+    # -H windowsgui links against the GUI subsystem instead of the console one,
+    # so launching the app does not flash a black terminal window behind it.
+    # That also means nothing can be written to a console, which is why the app
+    # keeps a log file instead (see internal/applog).
+    cmd /c "go build -trimpath -ldflags ""-s -w -H windowsgui"" -o bin\modemphone.exe ./cmd/modemphone 2>&1"
     $code = $LASTEXITCODE
 } finally {
     Pop-Location

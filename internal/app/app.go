@@ -20,6 +20,8 @@ import (
 	ftheme "fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
+	"modemphone/internal/applog"
+	"modemphone/internal/buildinfo"
 	"modemphone/internal/config"
 	"modemphone/internal/router"
 	"modemphone/internal/startup"
@@ -428,8 +430,13 @@ func (a *App) Close() {
 // pointed at, what the modem reports about itself, and the live link state.
 func (a *App) diagnostics() string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "ModemPhone\n")
+	fmt.Fprintf(&b, "ModemPhone %s", buildinfo.Describe())
+	if c := buildinfo.Short(); c != "" {
+		fmt.Fprintf(&b, " (%s)", c)
+	}
+	fmt.Fprintf(&b, "\n")
 	fmt.Fprintf(&b, "  settings file: %s\n", mustPath())
+	fmt.Fprintf(&b, "  log file:    %s\n", applog.Describe())
 	fmt.Fprintf(&b, "  router:        %s (user %s)\n", a.cfg.Host, a.cfg.Username)
 	fmt.Fprintf(&b, "  poll interval: %ds\n", a.cfg.PollSeconds)
 	fmt.Fprintf(&b, "  storage:       %s\n", a.cfg.StorageMode)
