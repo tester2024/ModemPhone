@@ -88,14 +88,19 @@ func main() {
 	a := app.New(win, cfg, fonts)
 	win.SetOnClosed(a.Close)
 
+	// The tray is installed before the event loop starts, and synchronously.
+	//
+	// Registering the tray adds the icon straight away, so the icon appears
+	// either way, but the loop that pumps tray messages is started by the
+	// toolkit as it begins running, and only if the tray was already
+	// registered by then. Setting this up afterwards, or from another
+	// goroutine, leaves an icon that right-clicks to nothing.
+	a.EnableTray()
+
 	// Start is called before the event loop so the first load is already
 	// under way when the window appears. The work happens on a goroutine, so
 	// this does not delay the first frame.
 	a.Start(startTab)
-
-	// The tray is installed from a goroutine after the event loop starts, because
-	// it needs a real window manager and would hang a headless test application.
-	go a.EnableTray()
 
 	win.ShowAndRun()
 }

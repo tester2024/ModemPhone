@@ -145,13 +145,32 @@ func (a *App) numberCopied(number string) {
 	a.setStatus("Copied " + number + " to the clipboard")
 }
 
-// trayApp is the part of Fyne's application that owns the system tray. Those
-// methods live on an unexported concrete type, so they are reached through this
-// interface; on a build without tray support the assertion simply fails and the
-// app carries on without a tray icon.
-type trayApp interface {
-	SetSystemTrayIcon(fyne.Resource)
-	SetSystemTrayMenu(*fyne.Menu)
+// trayApp is the system tray part of Fyne's desktop application interface.
+// Using the toolkit's own interface, rather than a home-made one, keeps this
+// working when the underlying implementation changes.
+type trayApp = desktop.App
+
+// EnableTray installs the tray icon and menu.
+//
+// It must be called before the event loop starts. Registering the tray adds the
+// icon immediately, so a late call still shows an icon, but the loop that
+// delivers tray clicks is started by the toolkit as it runs and is skipped when
+// the tray was not registered yet. The result is an icon that right-clicks to
+// nothing, which is why this is not done from a goroutine.
+func (a *App) EnableTray() {
+	fa := fyne.CurrentApp()
+	if fa == nil {
+		return
+	}
+	desk, ok := fa.(desktop.App)
+	if !ok {
+		return
+	}
+	desk.SetSystemTrayMenu(a.trayMenu())
+
+	// Closing the window hides it and keeps polling, so a new message still
+	// raises a notification. Quitting is done from the tray menu.
+	a.win.SetCloseIntercept(func() { a.hide() })
 }
 
 // trayIcon loads the tray icon. The Windows tray needs a raster image, so the
@@ -162,43 +181,6 @@ func trayIcon() fyne.Resource {
 		return nil
 	}
 	return fyne.NewStaticResource("tray.png", raw)
-}
-
-// installTray sets up the system tray, which is the only way back into the
-// window once it has been closed to the background.
-//
-// The notification area is not ready until the event loop is running, so the
-// install is retried for a few seconds. Failing that the app simply carries on
-// without a tray icon rather than refusing to start.
-func (a *App) installTray() {
-	fa := fyne.CurrentApp()
-	if fa == nil {
-		return
-	}
-	tray, ok := fa.(trayApp)
-	if !ok {
-		return
-	}
-
-	a.setTrayMenu(tray, a.trayMenu())
-}
-
-// setTrayMenu installs the tray menu, exactly once.
-//
-// The driver starts the tray on the first call to SetSystemTrayMenu, and every
-// later call resets the live menu and spawns another goroutine watching each
-// item's click channel. Calling it repeatedly leaves a menu whose entries are
-// wired to abandoned channels, so the buttons appear but do nothing. Once is
-// correct.
-//
-// The icon needs no separate call: the driver falls back to the application's own
-// icon when the tray starts, and that is set before the window is created.
-func (a *App) setTrayMenu(tray trayApp, menu *fyne.Menu) {
-	tray.SetSystemTrayMenu(menu)
-
-	// Closing the window hides it and keeps polling, so a new message still
-	// raises a notification. Quitting is done from the tray menu.
-	a.win.SetCloseIntercept(func() { a.hide() })
 }
 
 // show brings the window back from the background.
@@ -390,14 +372,6 @@ func (a *App) Start(startTab string) {
 	a.refreshAll()
 	go a.pollLoop()
 }
-
-// EnableTray installs the system tray icon and the close-to-background
-// behaviour.
-//
-// It is deliberately separate from Start: the tray reaches into the window
-// manager, which a headless test application cannot answer, so only main calls
-// it.
-func (a *App) EnableTray() { a.installTray() }
 
 // TabNames lists the tabs in the order they appear, which the command line
 // argument is matched against.
