@@ -183,39 +183,18 @@ func (a *App) installTray() {
 	a.setTrayMenu(tray, a.trayMenu())
 }
 
-// setTrayMenu installs the tray menu, retrying briefly because the tray is
-// created asynchronously by the driver and a menu set before it exists is lost.
+// setTrayMenu installs the tray menu, exactly once.
 //
-// Calling this again is how the menu is refreshed, so a later call with an
-// updated menu is cheap and safe.
+// The driver starts the tray on the first call to SetSystemTrayMenu, and every
+// later call resets the live menu and spawns another goroutine watching each
+// item's click channel. Calling it repeatedly leaves a menu whose entries are
+// wired to abandoned channels, so the buttons appear but do nothing. Once is
+// correct.
+//
+// The icon needs no separate call: the driver falls back to the application's own
+// icon when the tray starts, and that is set before the window is created.
 func (a *App) setTrayMenu(tray trayApp, menu *fyne.Menu) {
-	// The menu does not depend on the tray being ready: the driver only starts
-	// the tray loop on the first call, and later calls refresh the menu in
-	// place. The icon is the part that races, so it is set separately and
-	// later, by which time the tray exists.
 	tray.SetSystemTrayMenu(menu)
-
-	go func() {
-		icon := trayIcon()
-		if icon == nil {
-			return
-		}
-		// A few attempts a moment apart. The first is expected to be too early
-		// while the tray loop starts; after that it lands. Giving up quietly is
-		// better than logging the same complaint every launch.
-		for i := 0; i < 6; i++ {
-			a.mu.Lock()
-			stop := a.closing
-			a.mu.Unlock()
-			if stop {
-				return
-			}
-			if i > 0 {
-				tray.SetSystemTrayIcon(icon)
-			}
-			time.Sleep(700 * time.Millisecond)
-		}
-	}()
 
 	// Closing the window hides it and keeps polling, so a new message still
 	// raises a notification. Quitting is done from the tray menu.
@@ -252,8 +231,10 @@ func (a *App) toggleStartAtLogin() {
 	if err := config.Save(a.cfg); err != nil {
 		log.Println("saving settings:", err)
 	}
-	// Rebuild the menu so the tick reflects the new state.
-	a.installTray()
+	// The menu is deliberately not rebuilt here. The driver resets the live
+	// menu on every SetSystemTrayMenu call, so refreshing it would leave the
+	// entries wired to abandoned click channels. The tick reflects the saved
+	// setting from the next launch instead.
 }
 
 // hide sends the window to the background without stopping.

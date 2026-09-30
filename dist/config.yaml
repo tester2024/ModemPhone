@@ -1,0 +1,174 @@
+version: 2
+project_name: ModemPhone
+release:
+  github:
+    owner: tester2024
+    name: ModemPhone
+  replace_existing_draft: true
+  prerelease: auto
+  name_template: '{{.Tag}}'
+  footer: |
+    ---
+    Built from `{{ .ShortCommit }}`.
+    Windows builds launch without a console window.
+builds:
+  - id: windows
+    goos:
+      - windows
+    goarch:
+      - amd64
+    goamd64:
+      - v1
+    go386:
+      - sse2
+    goarm:
+      - "6"
+    goarm64:
+      - v8.0
+    gomips:
+      - hardfloat
+    goppc64:
+      - power8
+    goriscv64:
+      - rva20u64
+    targets:
+      - windows_amd64_v1
+    dir: .
+    main: ./cmd/modemphone
+    binary: modemphone
+    hooks:
+      pre:
+        - cmd: cmd /c "if not exist rsrc_windows_amd64.syso exit /b 0"
+    builder: go
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    tool: go
+    command: build
+    ldflags:
+      - -s -w
+      - -H windowsgui
+      - -X main.version={{ .Version }}
+      - -X main.commit={{ .Commit }}
+    flags:
+      - -trimpath
+archives:
+  - id: windows
+    ids:
+      - windows
+    builds_info:
+      mode: 493
+    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    formats:
+      - zip
+    files:
+      - src: README.md
+      - src: LICENSE*
+      - src: install.ps1
+        dst: install.ps1
+srpm:
+  package_name: ModemPhone
+  file_name_template: '{{ .PackageName }}-{{ .Version }}.src.rpm'
+  bins:
+    ModemPhone: '%{goipath}'
+snapshot:
+  version_template: '{{ incpatch .Version }}-next'
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+docker_digest:
+  name_template: digests.txt
+changelog:
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+  sort: asc
+  format: '{{ .SHA }} {{ .Message }}'
+  groups:
+    - title: Features
+      regexp: ^.*(feat|add|support|implement)[:].*
+    - title: Fixes
+      regexp: ^.*(fix|resolve|repair)[:].*
+    - title: Other
+      regexp: .*
+dist: dist
+env_files:
+  github_token: ~/.config/goreleaser/github_token
+  gitlab_token: ~/.config/goreleaser/gitlab_token
+  gitea_token: ~/.config/goreleaser/gitea_token
+before:
+  hooks:
+    - go mod tidy
+    - go test ./...
+source:
+  name_template: '{{ .ProjectName }}-{{ .Version }}'
+  format: tar.gz
+gomod:
+  gobinary: go
+announce:
+  twitter:
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}'
+  mastodon:
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}'
+    server: ""
+  reddit:
+    title_template: '{{ .ProjectName }} {{ .Tag }} is out!'
+    url_template: '{{ .ReleaseURL }}'
+  slack:
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}'
+    username: GoReleaser
+  discord:
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}'
+    author: GoReleaser
+    color: "3888754"
+    icon_url: https://goreleaser.com/static/avatar.png
+  teams:
+    title_template: '{{ .ProjectName }} {{ .Tag }} is out!'
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}'
+    color: '#2D313E'
+    icon_url: https://goreleaser.com/static/avatar.png
+  smtp:
+    subject_template: '{{ .ProjectName }} {{ .Tag }} is out!'
+    body_template: 'You can view details from: {{ .ReleaseURL }}'
+  mattermost:
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}'
+    title_template: '{{ .ProjectName }} {{ .Tag }} is out!'
+    color: '#2D313E'
+    username: GoReleaser
+  linkedin:
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}'
+  telegram:
+    message_template: '{{ print .ProjectName " " .Tag " is out! Check it out at " .ReleaseURL | mdv2escape }}'
+    parse_mode: MarkdownV2
+  webhook:
+    message_template: '{ "message": "{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}"}'
+    content_type: application/json; charset=utf-8
+    expected_status_codes:
+      - 200
+      - 201
+      - 202
+      - 204
+  opencollective:
+    title_template: '{{ .Tag }}'
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out!<br/>Check it out at <a href="{{ .ReleaseURL }}">{{ .ReleaseURL }}</a>'
+  bluesky:
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}'
+  discourse:
+    title_template: '{{ .ProjectName }} {{ .Tag }} is out!'
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}'
+    username: system
+git:
+  tag_sort: -version:refname
+mcp:
+  name: ""
+  title: ""
+  auth:
+    type: none
+retry:
+  attempts: 10
+  delay: 10s
+  max_delay: 5m0s
+github_urls:
+  download: https://github.com
+gitlab_urls:
+  download: https://gitlab.com
