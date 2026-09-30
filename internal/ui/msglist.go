@@ -166,11 +166,6 @@ func DeliveryState(status string) string {
 // to check filtering.
 func (m *MsgList) shownCount() int { return len(m.shown) }
 
-// SetWrapWidth is accepted for symmetry with the other widgets. Fyne's list
-// sizes its own rows, so the text is elided rather than wrapped to a width set
-// here.
-func (m *MsgList) SetWrapWidth(float32) {}
-
 func (m *MsgList) applyFilter() {
 	m.shown = m.shown[:0]
 	unread := 0
@@ -218,7 +213,6 @@ func (m *MsgList) createRow() fyne.CanvasObject {
 	// secondary text: Persian strokes are thin at small sizes in the Regular
 	// weight, and message bodies are the thing the app exists to show.
 	preview := Label("", theme.Text, previewSize, fontsMedium(m.fonts))
-
 	// Only real objects go in the variadic list: Fyne's border layout
 	// dereferences every entry, so a nil here would panic when the row is
 	// measured.

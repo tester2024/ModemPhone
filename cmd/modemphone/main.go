@@ -10,6 +10,7 @@ import (
 	"embed"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"fyne.io/fyne/v2"
@@ -121,6 +122,8 @@ func firstArg() string {
 // executable.
 func loadFonts() (theme.Fonts, error) {
 	var f theme.Fonts
+	// A missing embedded file falls back to the copy beside the executable, so
+	// a developer build can drop in a different typeface.
 	read := func(name string) ([]byte, error) {
 		b, err := fontFS.ReadFile("assets/fonts/" + name)
 		if err == nil {
@@ -130,7 +133,7 @@ func loadFonts() (theme.Fonts, error) {
 		if exeErr != nil {
 			return nil, err
 		}
-		return os.ReadFile(dirJoin(dirOf(exe), "assets", "fonts", name))
+		return os.ReadFile(filepath.Join(filepath.Dir(exe), "assets", "fonts", name))
 	}
 
 	regular, err := read("Vazirmatn-Regular.ttf")

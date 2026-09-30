@@ -345,25 +345,6 @@ func attrValue(fragment, attr string) string {
 	return rest[:j]
 }
 
-func firstAttrValue(fragment string) string {
-	rest := fragment
-	for {
-		i := strings.Index(rest, `value="`)
-		if i < 0 {
-			return ""
-		}
-		rest = rest[i+len(`value="`):]
-		j := strings.Index(rest, `"`)
-		if j < 0 {
-			return ""
-		}
-		if v := rest[:j]; v != "" {
-			return v
-		}
-		rest = rest[j:]
-	}
-}
-
 // validateNumber mirrors the firmware's compose-page rule: digits and
 // semicolons only, where semicolons separate bulk recipients.
 func validateNumber(number string) error {

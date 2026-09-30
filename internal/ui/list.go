@@ -14,7 +14,6 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
 
 	"modemphone/internal/ui/theme"
 )
@@ -27,21 +26,9 @@ func Label(s string, col color.NRGBA, size float32, fonts theme.Fonts) *canvas.T
 	return t
 }
 
-// LabelMedium is a text object in the medium face, which reads better than the
-// regular weight for Persian body text at small sizes.
-func LabelMedium(s string, col color.NRGBA, size float32, fonts theme.Fonts) *canvas.Text {
-	t := canvas.NewText(s, col)
-	t.TextSize = size
-	if fonts.Medium != nil {
-		t.FontSource = fonts.Medium
-	} else {
-		t.FontSource = fonts.Regular
-	}
-	return t
-}
-
-// fontsMedium returns the font set, for callers that want the medium face
-// through the shared Label helper.
+// fontsMedium returns a font set whose regular face is the medium one, so text
+// that needs more weight can still go through the shared Label helper. Persian
+// body text reads better this way: the regular face is too thin at small sizes.
 func fontsMedium(f theme.Fonts) theme.Fonts {
 	if f.Medium == nil {
 		return f
@@ -94,14 +81,6 @@ func AlignFor(s string) fyne.TextAlign {
 	return fyne.TextAlignLeading
 }
 
-// WrapLabel returns a wrapping label for a message body.
-func WrapLabel(s string, size float32, bold bool, fonts theme.Fonts) *widget.Label {
-	l := widget.NewLabelWithStyle(s, AlignFor(s), fyne.TextStyle{Bold: bold})
-	l.Wrapping = fyne.TextWrapWord
-	l.Importance = widget.HighImportance
-	return l
-}
-
 // displayNumber makes a sender readable. A message with no sender shows a
 // placeholder rather than an empty gap.
 func displayNumber(number string) string {
@@ -109,13 +88,6 @@ func displayNumber(number string) string {
 		return "(no sender)"
 	}
 	return number
-}
-
-// Panel draws a rounded surface behind its content.
-func Panel(content fyne.CanvasObject) fyne.CanvasObject {
-	bg := canvas.NewRectangle(theme.Surface)
-	bg.CornerRadius = 10
-	return container.NewStack(bg, container.NewPadded(content))
 }
 
 // SpacerBox expands to fill the free space in a row, pushing later siblings to
