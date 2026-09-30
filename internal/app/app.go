@@ -180,34 +180,40 @@ func (a *App) installTray() {
 		return
 	}
 
-	menu := fyne.NewMenu(
-		"ModemPhone",
-		fyne.NewMenuItem("Show", func() { a.show() }),
-		fyne.NewMenuItem("Check now", func() { a.refreshAll() }),
-		fyne.NewMenuItem("", nil), // a separator
-		fyne.NewMenuItem("Quit", func() { a.quit() }),
-	)
-	icon := trayIcon()
+	a.setTrayMenu(tray, a.trayMenu())
+}
+
+// setTrayMenu installs the tray menu, retrying briefly because the tray is
+// created asynchronously by the driver and a menu set before it exists is lost.
+//
+// Calling this again is how the menu is refreshed, so a later call with an
+// updated menu is cheap and safe.
+func (a *App) setTrayMenu(tray trayApp, menu *fyne.Menu) {
+	// The menu does not depend on the tray being ready: the driver only starts
+	// the tray loop on the first call, and later calls refresh the menu in
+	// place. The icon is the part that races, so it is set separately and
+	// later, by which time the tray exists.
+	tray.SetSystemTrayMenu(menu)
 
 	go func() {
-		for i := 0; i < 20; i++ {
+		icon := trayIcon()
+		if icon == nil {
+			return
+		}
+		// A few attempts a moment apart. The first is expected to be too early
+		// while the tray loop starts; after that it lands. Giving up quietly is
+		// better than logging the same complaint every launch.
+		for i := 0; i < 6; i++ {
 			a.mu.Lock()
 			stop := a.closing
 			a.mu.Unlock()
 			if stop {
 				return
 			}
-			if icon != nil {
+			if i > 0 {
 				tray.SetSystemTrayIcon(icon)
 			}
-			tray.SetSystemTrayMenu(menu)
-			// A successful install produces no error here, so the first pass
-			// is followed by a short settle and a few retries to cover the
-			// window before the tray exists.
-			time.Sleep(500 * time.Millisecond)
-			if i == 2 {
-				return
-			}
+			time.Sleep(700 * time.Millisecond)
 		}
 	}()
 
@@ -220,6 +226,34 @@ func (a *App) installTray() {
 func (a *App) show() {
 	a.win.Show()
 	a.win.RequestFocus()
+}
+
+// showTab opens the window on a named tab, which is what the tray's Inbox and
+// New message entries do.
+func (a *App) showTab(name string) {
+	if i := a.tabIndex(name); i >= 0 {
+		a.tabs.SelectIndex(i)
+	}
+	a.show()
+}
+
+// toggleStartAtLogin flips the autostart registration and reports the outcome.
+func (a *App) toggleStartAtLogin() {
+	want := !a.cfg.StartAtLogin
+	now, err := startup.Set(want)
+	a.cfg.StartAtLogin = now
+	if err != nil {
+		a.setStatus(err.Error())
+	} else if now {
+		a.setStatus("Added to Windows startup")
+	} else {
+		a.setStatus("Removed from Windows startup")
+	}
+	if err := config.Save(a.cfg); err != nil {
+		log.Println("saving settings:", err)
+	}
+	// Rebuild the menu so the tick reflects the new state.
+	a.installTray()
 }
 
 // hide sends the window to the background without stopping.

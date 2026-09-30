@@ -10,9 +10,9 @@ import (
 // The fixtures here are invented. Nothing in this file is taken from a real
 // inbox, and the numbers are ones no network would route.
 const (
-	faNumber   = "09101234567"  //
-	faNumber2  = "09101234568"  //
-	faSender   = "A SENDER"     //
+	faNumber   = "09101234567" //
+	faNumber2  = "09101234568" //
+	faSender   = "A SENDER"    //
 	faUSSD     = "*100#"
 	faIndex    = "1"
 	faTime     = "2026-01-01 10:00:00"
@@ -91,12 +91,12 @@ func TestViewerKeepsSenderAsPlainText(t *testing.T) {
 // SMS: a USSD code, a local number, an international one, and none at all.
 func TestExtractNumbersHandlesRealShapes(t *testing.T) {
 	cases := map[string]int{
-		faUSSD:                               1,
+		faUSSD:                                 1,
 		"code: 12345 a brand name here #12345": 1,
-		"call +98910273751 today":            1,
-		"no numbers here at all":              0,
-		"short 1234":                          0,
-		"a date 2026/01/01 in the text":       0,
+		"call +98910273751 today":              1,
+		"no numbers here at all":               0,
+		"short 1234":                           0,
+		"a date 2026/01/01 in the text":        0,
 	}
 	for body, want := range cases {
 		if got := len(ExtractNumbers(body)); got != want {

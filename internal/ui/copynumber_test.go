@@ -23,7 +23,7 @@ var digitCounts = map[string]int{
 	// Persian digits, the range an Arabic-only class would miss
 	"شماره ۰۹۱۰۱۲۳۴۵۶۷ را تماس بگیرید": 1,
 	// nothing worth offering
-	"no numbers here at all":       0,
+	"no numbers here at all":      0,
 	"short 1234":                  0,
 	"a date 2026/01/01 in a text": 0,
 }

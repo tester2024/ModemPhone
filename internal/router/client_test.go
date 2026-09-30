@@ -12,13 +12,13 @@ import (
 // These are the device's addresses as reported by a fake firmware. They are
 // invented, not taken from anyone's modem.
 const (
-	testHost    = "192.0.2.10"       // TEST-NET-1, reserved for documentation
-	testCarrier = "TEST-CARRIER-1"   //
-	testModule  = "TEST-MODULE-1"    //
-	testModel   = "TEST-MODEL-1"     //
-	testIMEI    = "000000000000000"  //
-	testPhone   = "09101234567"      // a number no network will route
-	testIP      = "203.0.113.7"      // TEST-NET-3
+	testHost    = "192.0.2.10"      // TEST-NET-1, reserved for documentation
+	testCarrier = "TEST-CARRIER-1"  //
+	testModule  = "TEST-MODULE-1"   //
+	testModel   = "TEST-MODEL-1"    //
+	testIMEI    = "000000000000000" //
+	testPhone   = "09101234567"     // a number no network will route
+	testIP      = "203.0.113.7"     // TEST-NET-3
 )
 
 // fakeRouter serves the firmware's endpoints with canned responses so the
